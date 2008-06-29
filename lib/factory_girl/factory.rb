@@ -129,7 +129,7 @@ class Factory
   #
   # are equivilent. 
   def method_missing (name, *args, &block)
-    return @static_attributes[name] if @static_attributes.has_key?(name) && args.blank?
+    return @static_attributes[name] if @static_attributes.has_key?(name) && args.empty?
     return @lazy_attribute_blocks[name].call(self) if @lazy_attribute_names.include?(name)
     
     add_attribute(name, *args, &block)
