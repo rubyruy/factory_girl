@@ -57,19 +57,23 @@ class FactoryTest < Test::Unit::TestCase
       setup do
         # Can't think of a reasonable way of testing this with mocks
         Mocha::Mockery.instance.teardown
+        @run_log = []
+        @base_factory = Factory.define(:base, :class=>User) do |f|
+          @run_log << [:base_proc, f]
+        end
       end
       should "run the existing factory's build proc before running the acutal proc" do
-        run_log = []
-        parent_factory = Factory.define(:parent, :class=>User) do |f|
-          run_log << [:parent_proc, f]
+
+        @sub_factory = Factory.define(:sub, :like=>:base) do |f|
+          @run_log << [:sub_proc, f]
         end
-        child_factory = Factory.define(:child, :like=>:parent) do |f|
-          run_log << [:child_proc, f]
-        end
-        assert_not_equal child_factory, parent_factory
-        assert_equal [[:parent_proc, parent_factory], [:parent_proc, child_factory], [:child_proc, child_factory]],
-                     run_log
+        assert_not_equal @sub_factory, @base_factory
+        assert_equal [[:base_proc,  @base_factory], 
+                      [:base_proc,  @sub_factory], 
+                      [:sub_proc,   @sub_factory]],
+                     @run_log
       end
+
     end
 
   end
