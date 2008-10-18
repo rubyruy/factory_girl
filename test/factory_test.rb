@@ -73,7 +73,22 @@ class FactoryTest < Test::Unit::TestCase
                       [:sub_proc,   @sub_factory]],
                      @run_log
       end
-
+      should "not share the build_proc queue" do
+        @first_sub_factory = Factory.define(:first_sub, :like=>:base) do |f|
+          @run_log << [:first_sub_proc, f]
+        end
+        
+        @second_sub_factory = Factory.define(:second_sub, :like=>:base) do |f|
+          @run_log << [:second_sub_proc, f]
+        end
+        
+        assert_equal [[:base_proc,      @base_factory], 
+                      [:base_proc,      @first_sub_factory], 
+                      [:first_sub_proc, @first_sub_factory],
+                      [:base_proc,      @second_sub_factory], 
+                      [:second_sub_proc,@second_sub_factory]],
+                     @run_log
+      end
     end
 
   end

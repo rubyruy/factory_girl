@@ -30,7 +30,7 @@ class Factory
     
     if factories[like]
       instance = Factory.new(name, options.merge(:class => factories[like].build_class))
-      instance.build_procs = factories[like].build_procs
+      instance.build_procs = factories[like].build_procs.dup
     else
       instance = Factory.new(name, options)
     end
