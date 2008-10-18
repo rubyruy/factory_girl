@@ -10,7 +10,7 @@ class Factory
   cattr_accessor :definition_file_paths
   self.definition_file_paths = %w(factories test/factories spec/factories)
 
-  attr_reader :factory_name
+  attr_accessor :factory_name, :options, :build_procs
 
   # Defines a new factory that can be used by the build strategies (create and
   # build) to build new objects.
@@ -25,9 +25,19 @@ class Factory
   #
   # Yields:
   #    The newly created factory (Factory)
-  def self.define (name, options = {})
-    instance = Factory.new(name, options)
-    yield(instance)
+  def self.define (name, options = {}, &proc)
+    like = options.delete(:like)
+    
+    if factories[like]
+      instance = Factory.new(name, options.merge(:class => factories[like].build_class))
+      instance.build_procs = factories[like].build_procs
+    else
+      instance = Factory.new(name, options)
+    end
+
+    (instance.build_procs ||= []) << proc
+    instance.build_procs.each {|p| p.call(instance)}
+    
     self.factories[instance.factory_name] = instance
   end
 
