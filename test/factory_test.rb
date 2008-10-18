@@ -27,6 +27,7 @@ class FactoryTest < Test::Unit::TestCase
       @name    = :user
       @factory = mock('factory')
       @factory.stubs(:factory_name).returns(@name)
+      @factory.stubs(:build_procs).returns([])
       @options = { :class => 'magic' }
       Factory.stubs(:new).returns(@factory)
     end
@@ -49,6 +50,26 @@ class FactoryTest < Test::Unit::TestCase
       assert_equal Factory.factories[@name], 
                    @factory,
                    "Factories: #{Factory.factories.inspect}"
+    end
+    
+      
+    context "based on an existing factory" do
+      setup do
+        # Can't think of a reasonable way of testing this with mocks
+        Mocha::Mockery.instance.teardown
+      end
+      should "run the existing factory's build proc before running the acutal proc" do
+        run_log = []
+        parent_factory = Factory.define(:parent, :class=>User) do |f|
+          run_log << [:parent_proc, f]
+        end
+        child_factory = Factory.define(:child, :like=>:parent) do |f|
+          run_log << [:child_proc, f]
+        end
+        assert_not_equal child_factory, parent_factory
+        assert_equal [[:parent_proc, parent_factory], [:parent_proc, child_factory], [:child_proc, child_factory]],
+                     run_log
+      end
     end
 
   end
