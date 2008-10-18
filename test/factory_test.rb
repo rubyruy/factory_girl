@@ -36,7 +36,7 @@ class FactoryTest < Test::Unit::TestCase
       Factory.define(@name, @options) {|f| }
     end
 
-    should "pass the factory do the block" do
+    should "pass the factory to the block" do
       yielded = nil
       Factory.define(@name) do |y|
         yielded = y
