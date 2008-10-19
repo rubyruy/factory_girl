@@ -28,8 +28,9 @@ class FactoryTest < Test::Unit::TestCase
       @factory = mock('factory')
       @factory.stubs(:factory_name).returns(@name)
       @factory.stubs(:build_procs).returns([])
+      @factory.stubs(:run_definitions)
+      @factory.stubs(:parent_factories).returns([])
       @options = { :class => 'magic' }
-      Factory.stubs(:new).returns(@factory)
     end
 
     should "create a new factory using the specified name and options" do
@@ -39,26 +40,25 @@ class FactoryTest < Test::Unit::TestCase
 
     should "pass the factory to the block" do
       yielded = nil
-      Factory.define(@name) do |y|
+      factory = Factory.define(@name) do |y|
         yielded = y
       end
-      assert_equal @factory, yielded
+      assert_equal factory, yielded
     end
 
     should "add the factory to the list of factories" do
-      Factory.define(@name) {|f| }
+      factory = Factory.define(@name) {|f| }
       assert_equal Factory.factories[@name], 
-                   @factory,
+                   factory,
                    "Factories: #{Factory.factories.inspect}"
     end
     
       
     context "based on an existing factory" do
       setup do
-        # Can't think of a reasonable way of testing this with mocks
-        Mocha::Mockery.instance.teardown
         @run_log = []
         @base_factory = Factory.define(:base, :class=>User) do |f|
+          f.name "Base"
           @run_log << [:base_proc, f]
         end
       end
@@ -89,6 +89,18 @@ class FactoryTest < Test::Unit::TestCase
                       [:second_sub_proc,@second_sub_factory]],
                      @run_log
       end
+      
+      should "allow overriding of an attribute form the factory we're ':like' " do
+        Factory.define(:sub, :like=>:base) do |f|
+          assert_nothing_raised(Factory::AttributeDefinitionError) do
+            f.name "Sub"
+          end
+          assert_raise(Factory::AttributeDefinitionError) do
+            f.name "Woha there"
+          end
+        end
+      end
+    
     end
 
   end

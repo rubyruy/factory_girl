@@ -36,7 +36,8 @@ class Factory
     end
 
     (instance.build_procs ||= []) << proc
-    instance.build_procs.each {|p| p.call(instance)}
+
+    instance.run_definitions
     
     self.factories[instance.factory_name] = instance
   end
@@ -49,6 +50,7 @@ class Factory
     options.assert_valid_keys(:class)
     @factory_name = factory_name_for(name)
     @options      = options
+    @defined_attributes = []
     @attributes   = []
   end
 
@@ -76,7 +78,7 @@ class Factory
     if attribute_defined?(attribute.name)
       raise AttributeDefinitionError, "Attribute already defined: #{name}"
     end
-
+    @defined_attributes << attribute.name
     @attributes << attribute
   end
 
@@ -141,6 +143,13 @@ class Factory
     instance
   end
 
+  def run_definitions
+    build_procs.each do |p|
+      @defined_attributes = []
+      p.call(self)
+    end
+  end
+  
   class << self
 
     # Generates and returns a Hash of attributes from this factory. Attributes
@@ -248,7 +257,7 @@ class Factory
   end
 
   def attribute_defined? (name)
-    !@attributes.detect {|attr| attr.name == name }.nil?
+    @defined_attributes.include?(name)
   end
 
 end
